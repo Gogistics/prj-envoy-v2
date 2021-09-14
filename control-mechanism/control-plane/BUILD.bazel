@@ -1,0 +1,5 @@
+exports_files([
+    "atai-dynamic-config.com.crt",
+    "atai-dynamic-config.com.key",
+    "custom-ca-certificates.crt",
+])

@@ -1,0 +1,42 @@
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+
+filegroup(
+    name = "certs",
+    srcs = [
+        "//utils/certs:atai-dynamic-config.com.crt",
+        "//utils/certs:atai-dynamic-config.com.key",
+        "//utils/certs:custom-ca-certificates.crt",
+    ],
+)
+
+filegroup(
+    name = "front-proxy-config-execution",
+    srcs = [
+        "//utils/configs:front-proxy-config.yaml",
+        "//utils/scripts:run-front-proxy.sh",
+    ],
+)
+
+container_image(
+    name = "front-proxy-v0.0.0",  # image tag
+    base = "@alpine_envoy//image",
+    entrypoint = [
+        "/run-front-proxy.sh",
+    ],
+    files = [
+        ":certs",
+        ":front-proxy-config-execution",
+    ],
+    repository = "alantai/prj-envoy-v2",
+    visibility = ["//visibility:public"],
+)
+
+# declare where and how the image will be published
+container_push(
+    name = "push-front-proxy",
+    format = "Docker",
+    image = ":front-proxy-v0.0.0",
+    registry = "index.docker.io",
+    repository = "alantai/prj-envoy-v2",
+    tag = "front-proxy-v0.0.0",
+)

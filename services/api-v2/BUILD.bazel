@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "api-v2_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/Gogistics/prj-envoy-v2/services/api-v2",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "api-v2",
+    embed = [":api-v2_lib"],
+    visibility = ["//visibility:public"],
+)
