@@ -152,6 +152,17 @@ $  docker run --name atai-go-dev \
      -it \
      --rm \
      golang:latest bash
+
+# write Bazel build to create a Docker image of the control plane
+
+# build Docker image of the control plane by Bazel
+# Note: currently this step needs workarounds because of the issues of com_github_envoyproxy_protoc_gen_validate and com_github_census_instrumentation_opencensus_proto
+# Solutions:
+# - https://github.com/bazelbuild/bazel-gazelle/issues/988#issuecomment-908973994
+# - https://github.com/census-instrumentation/opencensus-proto/issues/200#issuecomment-622610454
+# Once the workarounds have been applied, run the commands below:
+$ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //control-mechanism/control-plane:control-plane-v0.0.0
+$ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //control-mechanism/control-plane:control-plane-v0.0.0
 ```
 
 # build API services (WIP)

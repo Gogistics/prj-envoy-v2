@@ -1,5 +1,47 @@
-exports_files([
-    "atai-dynamic-config.com.crt",
-    "atai-dynamic-config.com.key",
-    "custom-ca-certificates.crt",
-])
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+
+filegroup(
+    name = "certs",
+    srcs = [
+        "//utils/certs:atai-dynamic-config.com.crt",
+        "//utils/certs:atai-dynamic-config.com.key",
+        "//utils/certs:custom-ca-certificates.crt",
+    ],
+)
+
+go_library(
+    name = "control-plane_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/Gogistics/prj-envoy-v2/control-mechanism/control-plane",
+    visibility = ["//visibility:private"],
+    deps = ["//control-mechanism/control-plane/utilhandlers"],
+)
+
+go_binary(
+    name = "control-plane",
+    embed = [":control-plane_lib"],
+    visibility = ["//visibility:public"],
+)
+
+container_image(
+    name = "control-plane-v0.0.0",
+    base = "@alpine_linux_amd64//image",
+    entrypoint = [
+        "/control-plane",
+    ],
+    files = [
+        ":certs",
+        ":control-plane",
+    ],
+    repository = "alantai/prj-envoy-v2",
+)
+
+container_push(
+    name = "push-control-plane",
+    format = "Docker",
+    image = ":control-plane-v0.0.0",
+    registry = "index.docker.io",
+    repository = "alantai/prj-envoy-v2",
+    tag = "control-plane-v0.0.0",
+)
