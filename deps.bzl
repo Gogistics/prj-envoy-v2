@@ -45,6 +45,22 @@ def go_dependencies():
         sum = "h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=",
         version = "v0.3.1",
     )
+
+    # ref: https://github.com/census-instrumentation/opencensus-proto/issues/200#issuecomment-622610454
+    go_repository(
+        name = "com_github_census_instrumentation_opencensus_proto",
+        build_extra_args = ["-exclude=src"],  # keep
+        importpath = "github.com/census-instrumentation/opencensus-proto",
+        sum = "h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=",
+        version = "v0.2.1",
+    )
+    # go_repository(
+    #     name = "com_github_census_instrumentation_opencensus_proto",
+    #     importpath = "github.com/census-instrumentation/opencensus-proto",
+    #     sum = "h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=",
+    #     version = "v0.2.1",
+    # )
+
     go_repository(
         name = "com_github_cespare_xxhash",
         importpath = "github.com/cespare/xxhash",
@@ -100,7 +116,8 @@ def go_dependencies():
     go_repository(
         name = "com_github_envoyproxy_protoc_gen_validate",
         importpath = "github.com/envoyproxy/protoc-gen-validate",
-        commit = "3446de835a6ea7b98e14dcfed18af19b4414a566",
+        sum = "h1:4CF52PCseTFt4bE+Yk3dIpdVi7XWuPVMhPtm4FaIJPM=",
+        version = "v0.6.1",
     )
     go_repository(
         name = "com_github_fsnotify_fsnotify",
@@ -652,17 +669,3 @@ def go_dependencies():
         sum = "h1:jwqTeEM3x6L9xDXrCxN0Hbg7vdGfPBOTIkr0+/LYZDA=",
         version = "v1.7.1",
     )
-    # ref: https://github.com/census-instrumentation/opencensus-proto/issues/200#issuecomment-622610454
-    go_repository(
-        name = "com_github_census_instrumentation_opencensus_proto",
-        importpath = "github.com/census-instrumentation/opencensus-proto",
-        sum = "h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=",
-        version = "v0.2.1",
-        build_extra_args = ["-exclude=src"],  # keep        
-    )
-    # go_repository(
-    #     name = "com_github_census_instrumentation_opencensus_proto",
-    #     importpath = "github.com/census-instrumentation/opencensus-proto",
-    #     sum = "h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=",
-    #     version = "v0.2.1",
-    # )

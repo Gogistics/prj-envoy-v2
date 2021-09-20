@@ -1,14 +1,49 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
+filegroup(
+    name = "certs",
+    srcs = [
+        "//utils/certs:atai-dynamic-config.com.crt",
+        "//utils/certs:atai-dynamic-config.com.key",
+    ],
+)
+
 go_library(
     name = "api-v1_lib",
     srcs = ["main.go"],
     importpath = "github.com/Gogistics/prj-envoy-v2/services/api-v1",
     visibility = ["//visibility:private"],
+    deps = ["//services/api-v1/utilhandlers"],
 )
 
 go_binary(
     name = "api-v1",
     embed = [":api-v1_lib"],
     visibility = ["//visibility:public"],
+)
+
+# docker build
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+
+container_image(
+    name = "api-v1.0.0.0",
+    base = "@alpine_linux_amd64//image",
+    entrypoint = [
+        "/api-v1",
+    ],
+    files = [
+        ":api-v1",
+        "certs",
+    ],
+    repository = "alantai/prj-envoy-v2",
+    visibility = ["//visibility:public"],
+)
+
+container_push(
+    name = "push-api-v1",
+    format = "Docker",
+    image = ":api-v1.0.0.0",
+    registry = "index.docker.io",
+    repository = "alantai/prj-envoy-v2",
+    tag = "v1.0.0.0",
 )

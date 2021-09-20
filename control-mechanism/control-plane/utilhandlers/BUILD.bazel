@@ -28,7 +28,6 @@ go_library(
         "@com_github_envoyproxy_go_control_plane//pkg/cache/v3:cache",
         "@com_github_envoyproxy_go_control_plane//pkg/server/v3:server",
         "@com_github_envoyproxy_go_control_plane//pkg/wellknown",
-
         "@com_github_golang_protobuf//ptypes:go_default_library_gen",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//credentials",

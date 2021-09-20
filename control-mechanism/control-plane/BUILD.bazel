@@ -34,6 +34,9 @@ container_image(
         ":certs",
         ":control-plane",
     ],
+    ports = [
+        "20000",
+    ],
     repository = "alantai/prj-envoy-v2",
 )
 

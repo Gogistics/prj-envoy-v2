@@ -11,7 +11,7 @@ Dynamically update Envoy by the control plane and what we are going to test are 
 * Send new configuration to the control plane, and it will forward the configuration to the Envoy. Test the API service 2. and will receive the response.
 * Stop the control plane and all services should still work fine.
 
-## ...
+## Development steps (WIP)
 Step 1. init networks
 Step 2. start Envoy front proxy
 Step 3. check the config.
@@ -163,11 +163,82 @@ $  docker run --name atai-go-dev \
 # Once the workarounds have been applied, run the commands below:
 $ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //control-mechanism/control-plane:control-plane-v0.0.0
 $ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //control-mechanism/control-plane:control-plane-v0.0.0
+
+# bring up a container running control plane
+$ docker run -itd \
+     --name atai_grpc_control_plane \
+     --network atai_control_mechanism \
+     --ip "173.10.0.22" \
+     --log-opt mode=non-blocking \
+     --log-opt max-buffer-size=5m \
+     --log-opt max-size=100m \
+     --log-opt max-file=5 \
+     alantai/prj-envoy-v2/control-mechanism/control-plane:control-plane-v0.0.0
+
+# check the logs of the generated container
+$ docker logs atai_grpc_control_plane
+# 2021/09/20 17:15:07 will serve snapshot {Resources:[{Version:1 Items:map[]} {Version:1 Items:map[api_service_v1:{Resource:name:"api_service_v1" type:LOGICAL_DNS connect_timeout:{seconds:5} lb_policy:LEAST_REQUEST load_assignment:{cluster_name:"api_service_v1" endpoints:{lb_endpoints:{endpoint:{address:{socket_address:{address:"173.11.0.21" port_value:443}}}} lb_endpoints:{endpoint:{address:{socket_address:{address:"173.11.0.22" port_value:443}}}}}} dns_lookup_family:V4_ONLY transport_socket:{name:"envoy.transport_sockets.tls" typed_config:{[type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext]:{}}} Ttl:<nil>}]} {Version:1 Items:map[]} {Version:1 Items:map[https_listener:{Resource:name:"https_listener" address:{socket_address:{address:"0.0.0.0" port_value:443}} filter_chains:{filters:{name:"envoy.filters.network.http_connection_manager" typed_config:{[type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager]:{stat_prefix:"ingress_http" route_config:{name:"service_route" virtual_hosts:{name:"api_servers" domains:"*" routes:{match:{prefix:"/api/v1"} route:{cluster:"api_service_v1"}}}} http_filters:{name:"envoy.filters.http.router"}}}} transport_socket:{name:"envoy.transport_sockets.tls" typed_config:{[type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext]:{common_tls_context:{tls_certificates:{certificate_chain:{inline_bytes:"-----BEGIN CERTIFICATE-----\nMIIEkzCCAnugAwIBAgIJAPDmgHLPbKVZMA0GCSqGSIb3DQEBCwUAMIGTMQswCQYD\nVQQGEwJUVzESMBAGA1UEBwwJS2FvaHNpdW5nMRIwEAYDVQQKDAlHb2dpc3RpY3Mx\nDzANBgNVBAsMBkRldk9wczEgMB4GA1UEAwwXYXRhaS1keW5hbWljLWNvbmZpZy5j\nb20xKTAnBgkqhkiG9w0BCQEWGmdvZ2lzdGljc0Bnb2dpc3RpY3MtdHcuY29tMB4X\nDTIxMDkxMjAxMzMxM1oXDTIzMDEyNTAxMzMxM1owVjELMAkGA1UEBhMCVVMxCzAJ\nBgNVBAgMAkNBMRgwFgYDVQQKDA9HT0dJU1RJQ1MsIEluYy4xIDAeBgNVBAMMF2F0\nYWktZHluYW1pYy1jb25maWcuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\nCgKCAQEAnnZL4aBrrryzx5DhDeXs8fZOu2C08q+mUEjYvJMmar0XyU4+9EtHlD4x\nWYRGOeA9lML7b7/NVbyQzdHcrrBrScgpdBCjK8AmRYng42mpi/cNNwEzJMo3fpNf\n+oiLJ1ykxwsjCGjstJmklwuy1Df0D6ql8gX9oMShbrNz+agoRFduB6XV6GA+kpEu\nSuJULQP20RblEISffx2X8LabaW3vO7Io2k20gTWgYAxTkAtpIBcHgcImJG4PI+FK\nwyZLDOkajDYWF7BiAHhYxNYN+PabaSmT7o+DXtOSd13Y0bpW3fcMCtaCdL0X14oH\nq4YHHUdVxPnfKkK0NSUKLAHi3LHmHQIDAQABoyYwJDAiBgNVHREEGzAZghdhdGFp\nLWR5bmFtaWMtY29uZmlnLmNvbTANBgkqhkiG9w0BAQsFAAOCAgEARXREWrZUYC+n\ndaMxgNPQ0O1eGKJbUyagpcGhDuJ5S4ekOTvk521mUnQ+lgkoV1xxcRAQv/LR1pql\nNy0R/2qMnRnabT++KGVh8ldCwqZjL8gW3syYyaCs1hill0mHOqSLz7Vs3q86S44J\nnhSdUmhPtHJjRNV2y+g19HicC7d244wx67GPL+h4hAXbB6TOg4860AVTNWMC9txW\nw2DoXSdmyFXkXw3nvj6LbgBpKf38pb7KCx8d0R/FVJ9M3j5cJwUAB+x55NCGO/iu\nARPG33MGYmSZGfECkPUalSBNDrkTxqHfOx1/LunyP2P1OSZeUZuPhDrwDKOmfob9\nay/boaal2kutF6HLmj+aE50LdTioVtXxI+E5KMPlb7QZ85FbfzM83hm2rnZVM0eX\nC4u3PYJyTsflrBc9PltsT/bDimXqShi1VrxlBQwFw2RcVX/dgiI491bur0OgE3Ho\ng0gYFqFgaz9bnuMqV+y6KJVrh3qB50AT3E2IU9PIX0HXMyVqp+XZ5D7UU5E9/nfe\nzn0ITDtyiern1gAlCExkn4OKT85yN7W9Je6bfCzRCN4sGZjnpn3vS1oxOf1NZUH4\nBqJnXtZxeFdoFxw/uhBuuk+GElNnVH9HDjY2PFCYBnsj7ba9HSnNOPUPkcqvR2PA\nCkHaiCDu9l3CdAyrWewXQeS/VZLSSh4=\n-----END CERTIFICATE-----\n"} private_key:{inline_bytes:"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAnnZL4aBrrryzx5DhDeXs8fZOu2C08q+mUEjYvJMmar0XyU4+\n9EtHlD4xWYRGOeA9lML7b7/NVbyQzdHcrrBrScgpdBCjK8AmRYng42mpi/cNNwEz\nJMo3fpNf+oiLJ1ykxwsjCGjstJmklwuy1Df0D6ql8gX9oMShbrNz+agoRFduB6XV\n6GA+kpEuSuJULQP20RblEISffx2X8LabaW3vO7Io2k20gTWgYAxTkAtpIBcHgcIm\nJG4PI+FKwyZLDOkajDYWF7BiAHhYxNYN+PabaSmT7o+DXtOSd13Y0bpW3fcMCtaC\ndL0X14oHq4YHHUdVxPnfKkK0NSUKLAHi3LHmHQIDAQABAoIBAHViZGvLjnluyC65\noD3PaWsEbuZXiTON8sHedM+cogTH9urkz7XgXjHusFgDqJIPDw84MVJi3xT4Dryp\nDbVKcu/BGxQjjvxF5xP0Q2ezSimo5V0twlkqg1l8isjohUyvUFEyas08DLzsZASQ\nYfTbTiyc2TkkPvHtNzjuLqdubgXRI8cVUXPgI81Ef6U4ml92/arp6CfXCaXGsYuW\ns46+iTuA+KyEtA6vUgGVCQqP3+0jHvD1DxyBqELDU9anTXf4oUhB4W6TPWq4F5v4\no7oPKe3bz3LlCx8gnP2Khd6T7j0h8GLFGmpgrKerEI3VATWd1HOVEsq617DOZjiN\nPIGlsnECgYEA0bryxE00FYdeGBP9MpgysAz2W9vcNAGveo0OzL1GG32taBJ40U/u\n27rl7hsb6ptOu/uQhDIugNj6Oj0+JhRTJiOKNSNNoZ4CDtwnKvJunC4Xtw86uA63\nxD1+IbcDS5AvbP0JJB+3w7bEPVZMiX69P5F1rR3McDYBFadnS/NQ7uMCgYEAwWvY\n7VIZfsGgksG5iPn9u8cE3hKj0FmiYrq+yBWAb9u/VivNi1MBtSMpa3hjzm7UgdZI\nPlFp59QBldFA/EmR62BoVOBzI/O9S4L5Qrqq0iEosvfmw9L9OIVjQFj947/ufKCO\nYURHNKf6KXSaHuEBzAhPlAZF83I10122TKv85v8CgYEAlqRiNU+CxqfplP/ekNWz\nKrLUzVwZSZ2gTjU9WR/mWF6oDCWgdC+m0FrpRmJgZd3R6sIhpmJo9pFjAiv1FOLq\nam2CmvJVk21r6wKEe5uQiUuuKwWcVpHzute0XkEW89KHzg/d3f2OP9xqDeiLpwLK\nqfsv+/14V2zi0IvibTJCgqMCgYBXyw78sX43BcZPtrTzUp10BSLVddp7MKQ/cgo0\noWXZ4AGaKGm0qqmkwWAEkvGierXkdRH3j1alzpolmYSIvxAHqYvRssswb2rlgn6H\nZlkw5bImgdVx3yvm4sypIXukS7MBSJM33RkA8pnfBTkLeRAqvz73rl1D4fxCg0/C\nv3IcmwKBgHo/RzeB+jkNWEJ3RqePEo1VoEwHdYP29bwv4D83XsLtxgg6ILoag6Eb\ntE/8bBgYoJjfcAbDnRd0xaxlIju8qiFaqBwjMIGz2OyxZxiUi7AlEgSI/vMuT2yy\ndt6kFaMwT5PYM1Lc5Es4S1DBqiOSU/gZ+Q9SPXs3z4OTRXNK+6/f\n-----END RSA PRIVATE KEY-----\n"}} validation_context:{trusted_ca:{inline_bytes:"ca-certificates.crt"}} alpn_protocols:"h2,http/1.1"}}}}} Ttl:<nil>}]} {Version:1 Items:map[server_cert:{Resource:name:"server_cert" tls_certificate:{certificate_chain:{inline_bytes:"-----BEGIN CERTIFICATE-----\nMIIEkzCCAnugAwIBAgIJAPDmgHLPbKVZMA0GCSqGSIb3DQEBCwUAMIGTMQswCQYD\nVQQGEwJUVzESMBAGA1UEBwwJS2FvaHNpdW5nMRIwEAYDVQQKDAlHb2dpc3RpY3Mx\nDzANBgNVBAsMBkRldk9wczEgMB4GA1UEAwwXYXRhaS1keW5hbWljLWNvbmZpZy5j\nb20xKTAnBgkqhkiG9w0BCQEWGmdvZ2lzdGljc0Bnb2dpc3RpY3MtdHcuY29tMB4X\nDTIxMDkxMjAxMzMxM1oXDTIzMDEyNTAxMzMxM1owVjELMAkGA1UEBhMCVVMxCzAJ\nBgNVBAgMAkNBMRgwFgYDVQQKDA9HT0dJU1RJQ1MsIEluYy4xIDAeBgNVBAMMF2F0\nYWktZHluYW1pYy1jb25maWcuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\nCgKCAQEAnnZL4aBrrryzx5DhDeXs8fZOu2C08q+mUEjYvJMmar0XyU4+9EtHlD4x\nWYRGOeA9lML7b7/NVbyQzdHcrrBrScgpdBCjK8AmRYng42mpi/cNNwEzJMo3fpNf\n+oiLJ1ykxwsjCGjstJmklwuy1Df0D6ql8gX9oMShbrNz+agoRFduB6XV6GA+kpEu\nSuJULQP20RblEISffx2X8LabaW3vO7Io2k20gTWgYAxTkAtpIBcHgcImJG4PI+FK\nwyZLDOkajDYWF7BiAHhYxNYN+PabaSmT7o+DXtOSd13Y0bpW3fcMCtaCdL0X14oH\nq4YHHUdVxPnfKkK0NSUKLAHi3LHmHQIDAQABoyYwJDAiBgNVHREEGzAZghdhdGFp\nLWR5bmFtaWMtY29uZmlnLmNvbTANBgkqhkiG9w0BAQsFAAOCAgEARXREWrZUYC+n\ndaMxgNPQ0O1eGKJbUyagpcGhDuJ5S4ekOTvk521mUnQ+lgkoV1xxcRAQv/LR1pql\nNy0R/2qMnRnabT++KGVh8ldCwqZjL8gW3syYyaCs1hill0mHOqSLz7Vs3q86S44J\nnhSdUmhPtHJjRNV2y+g19HicC7d244wx67GPL+h4hAXbB6TOg4860AVTNWMC9txW\nw2DoXSdmyFXkXw3nvj6LbgBpKf38pb7KCx8d0R/FVJ9M3j5cJwUAB+x55NCGO/iu\nARPG33MGYmSZGfECkPUalSBNDrkTxqHfOx1/LunyP2P1OSZeUZuPhDrwDKOmfob9\nay/boaal2kutF6HLmj+aE50LdTioVtXxI+E5KMPlb7QZ85FbfzM83hm2rnZVM0eX\nC4u3PYJyTsflrBc9PltsT/bDimXqShi1VrxlBQwFw2RcVX/dgiI491bur0OgE3Ho\ng0gYFqFgaz9bnuMqV+y6KJVrh3qB50AT3E2IU9PIX0HXMyVqp+XZ5D7UU5E9/nfe\nzn0ITDtyiern1gAlCExkn4OKT85yN7W9Je6bfCzRCN4sGZjnpn3vS1oxOf1NZUH4\nBqJnXtZxeFdoFxw/uhBuuk+GElNnVH9HDjY2PFCYBnsj7ba9HSnNOPUPkcqvR2PA\nCkHaiCDu9l3CdAyrWewXQeS/VZLSSh4=\n-----END CERTIFICATE-----\n"} private_key:{inline_bytes:"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAnnZL4aBrrryzx5DhDeXs8fZOu2C08q+mUEjYvJMmar0XyU4+\n9EtHlD4xWYRGOeA9lML7b7/NVbyQzdHcrrBrScgpdBCjK8AmRYng42mpi/cNNwEz\nJMo3fpNf+oiLJ1ykxwsjCGjstJmklwuy1Df0D6ql8gX9oMShbrNz+agoRFduB6XV\n6GA+kpEuSuJULQP20RblEISffx2X8LabaW3vO7Io2k20gTWgYAxTkAtpIBcHgcIm\nJG4PI+FKwyZLDOkajDYWF7BiAHhYxNYN+PabaSmT7o+DXtOSd13Y0bpW3fcMCtaC\ndL0X14oHq4YHHUdVxPnfKkK0NSUKLAHi3LHmHQIDAQABAoIBAHViZGvLjnluyC65\noD3PaWsEbuZXiTON8sHedM+cogTH9urkz7XgXjHusFgDqJIPDw84MVJi3xT4Dryp\nDbVKcu/BGxQjjvxF5xP0Q2ezSimo5V0twlkqg1l8isjohUyvUFEyas08DLzsZASQ\nYfTbTiyc2TkkPvHtNzjuLqdubgXRI8cVUXPgI81Ef6U4ml92/arp6CfXCaXGsYuW\ns46+iTuA+KyEtA6vUgGVCQqP3+0jHvD1DxyBqELDU9anTXf4oUhB4W6TPWq4F5v4\no7oPKe3bz3LlCx8gnP2Khd6T7j0h8GLFGmpgrKerEI3VATWd1HOVEsq617DOZjiN\nPIGlsnECgYEA0bryxE00FYdeGBP9MpgysAz2W9vcNAGveo0OzL1GG32taBJ40U/u\n27rl7hsb6ptOu/uQhDIugNj6Oj0+JhRTJiOKNSNNoZ4CDtwnKvJunC4Xtw86uA63\nxD1+IbcDS5AvbP0JJB+3w7bEPVZMiX69P5F1rR3McDYBFadnS/NQ7uMCgYEAwWvY\n7VIZfsGgksG5iPn9u8cE3hKj0FmiYrq+yBWAb9u/VivNi1MBtSMpa3hjzm7UgdZI\nPlFp59QBldFA/EmR62BoVOBzI/O9S4L5Qrqq0iEosvfmw9L9OIVjQFj947/ufKCO\nYURHNKf6KXSaHuEBzAhPlAZF83I10122TKv85v8CgYEAlqRiNU+CxqfplP/ekNWz\nKrLUzVwZSZ2gTjU9WR/mWF6oDCWgdC+m0FrpRmJgZd3R6sIhpmJo9pFjAiv1FOLq\nam2CmvJVk21r6wKEe5uQiUuuKwWcVpHzute0XkEW89KHzg/d3f2OP9xqDeiLpwLK\nqfsv+/14V2zi0IvibTJCgqMCgYBXyw78sX43BcZPtrTzUp10BSLVddp7MKQ/cgo0\noWXZ4AGaKGm0qqmkwWAEkvGierXkdRH3j1alzpolmYSIvxAHqYvRssswb2rlgn6H\nZlkw5bImgdVx3yvm4sypIXukS7MBSJM33RkA8pnfBTkLeRAqvz73rl1D4fxCg0/C\nv3IcmwKBgHo/RzeB+jkNWEJ3RqePEo1VoEwHdYP29bwv4D83XsLtxgg6ILoag6Eb\ntE/8bBgYoJjfcAbDnRd0xaxlIju8qiFaqBwjMIGz2OyxZxiUi7AlEgSI/vMuT2yy\ndt6kFaMwT5PYM1Lc5Es4S1DBqiOSU/gZ+Q9SPXs3z4OTRXNK+6/f\n-----END RSA PRIVATE KEY-----\n"}} Ttl:<nil>}]} {Version:1 Items:map[]} {Version:1 Items:map[]}] VersionMap:map[]}
+# 2021/09/20 17:15:07 Resource management server listening on 20000
+
+# in order to have atai_grpc_control_plane communicate with the frontend Envoy in atai_apis_network, connect atai_grpc_control_plane to atai_apis_network
+$ docker network atai_apis_network atai_grpc_control_plane
+
+# once the testing has been completed, remove the container
+$ docker rm -f atai_grpc_control_plane
 ```
 
-# build API services (WIP)
+## build API services
+Let's start writing API services.
+1. build the web app in Golang; source codes are under */services/api/v1* and */services/api/v2*
+2. test the web app by running it inside a container
 ```sh
+$ docker run -it \
+     --name atai_api_v1_dev \
+     --network atai_apis_network \
+     --ip "173.11.0.21" \
+     -v $(pwd):/app \
+     -w /app \
+     --rm \
+     golang:1.14.0-alpine sh
+$ go run main.go -dev
+
+# open the other terminal and access the container by the following command
+$ docker exec -it atai_api_v1_dev sh
+# install cURL by the following command
+$ apk add --update --no-cache curl
+
+# test the API endpoint
+$  curl -k https://0.0.0.0/api/v1
+# {"host":"a4efa98bfb18","wd":"/app/services/api-v1"}
+
+# build Docker images by Bazel
+$ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
+    //services/api-v1:api-v1.0.0.0
+$ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
+    //services/api-v1:api-v1.0.0.0
+
+# test the Docker image
+$ docker run -d \
+    -p 8443:443 \
+    --name atai_dynamic_control_service_api_v1 \
+    --network atai_apis_network \
+    --ip "173.11.0.21" \
+    --log-opt mode=non-blocking \
+    --log-opt max-buffer-size=5m \
+    --log-opt max-size=100m \
+    --log-opt max-file=5 \
+    alantai/prj-envoy-v2/services/api-v1:api-v1.0.0.0
+$ curl -k https://0.0.0.0:8443/api/v1
+# {"host":"0a481c4ef2e0","wd":"/"}
+
+# once the testing has been completed, remove the container
+$ docker rm -f atai_dynamic_control_service_api_v1
 ```
+
+## Bring up all components required for testing Envoy xDS (WIP)
 
 ## References:
+- https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane
+- https://github.com/envoyproxy/go-control-plane/tree/4d5454027eee333e007a8d6409efd9ed39134fa7/internal/example
+- https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/configuration-dynamic-control-plane#start-quick-start-dynamic-dynamic-resources
 - https://github.com/salrashid123/envoy_control

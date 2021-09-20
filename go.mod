@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/envoyproxy/go-control-plane v0.9.9
 	github.com/golang/protobuf v1.5.2
+	github.com/gorilla/mux v1.8.0
 	google.golang.org/grpc v1.36.0
 )
 
