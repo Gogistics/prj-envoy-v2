@@ -1,8 +1,9 @@
 # Dynamic configuration xDS (WIP)
 
 ## Steps of running dynamic configuration
-1. Draw diagram of the container topology
-2. Create folders
+1. Draw the [diagram of the container topology](https://drive.google.com/file/d/1ejx5Ap5PRk9eLVTmWkykfbR9FIDrGaOU/view?usp=sharing)
+2. Create the folders for resource management
+3. Install required tools such as Docker and Bazel
 
 ## Context
 Dynamically update Envoy by the control plane and what we are going to test are as follows:
@@ -100,6 +101,7 @@ $ docker run -d \
 
 $ docker network connect atai_control_mechanism atai_front_proxy
 
+# if jq is available
 $ curl -s http://0.0.0.0:8001/config_dump  | jq '.configs[1].static_clusters'
 # Or
 $ curl -s http://0.0.0.0:8001/config_dump | grep -A 35 -B 1 static_cluster
@@ -187,7 +189,7 @@ $ docker network atai_apis_network atai_grpc_control_plane
 $ docker rm -f atai_grpc_control_plane
 ```
 
-## build API services
+## Build API services
 Let's start writing API services.
 1. build the web app in Golang; source codes are under */services/api/v1* and */services/api/v2*
 2. test the web app by running it inside a container
@@ -233,7 +235,15 @@ $ curl -k https://0.0.0.0:8443/api/v1
 
 # once the testing has been completed, remove the container
 $ docker rm -f atai_dynamic_control_service_api_v1
+
+# once api-v2 app has been tested, run the following commands to build Docker images of api-v2
+$ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
+    //services/api-v2:api-v2.0.0.0
+$ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
+    //services/api-v2:api-v2.0.0.0
 ```
+
+## Build Docker images of Envoy proxies (WIP)
 
 ## Bring up all components required for testing Envoy xDS (WIP)
 

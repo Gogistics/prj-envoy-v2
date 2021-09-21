@@ -32,8 +32,8 @@ container_image(
         "/api-v1",
     ],
     files = [
-        ":api-v1",
         "certs",
+        ":api-v1",
     ],
     repository = "alantai/prj-envoy-v2",
     visibility = ["//visibility:public"],
