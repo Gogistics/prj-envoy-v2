@@ -245,8 +245,7 @@ $ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
 
 ## Build Docker images of Envoy proxies (WIP)
 
-## Bring up all components required for testing Envoy xDS (WIP)
-
+## Bring up all components required for testing Envoy xDS
 ```sh
 # bring up Envoy
 $ docker run -d \
@@ -293,10 +292,67 @@ $ docker run -itd \
     --log-opt max-file=5 \
     alantai/prj-envoy-v2/control-mechanism/control-plane:control-plane-v0.0.0 && \
     docker network connect atai_apis_network atai_grpc_control_plane
+
+# once all containers are running successfully, run the following command to test the API service
+$ curl -k -vvv https://atai-dynamic-config.com/api/v1
+# *   Trying 0.0.0.0...
+# * TCP_NODELAY set
+# * Connected to atai-dynamic-config.com (127.0.0.1) port 443 (#0)
+# * ALPN, offering h2
+# * ALPN, offering http/1.1
+# * successfully set certificate verify locations:
+# *   CAfile: /etc/ssl/cert.pem
+#   CApath: none
+# * TLSv1.2 (OUT), TLS handshake, Client hello (1):
+# * TLSv1.2 (IN), TLS handshake, Server hello (2):
+# * TLSv1.2 (IN), TLS handshake, Certificate (11):
+# * TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+# * TLSv1.2 (IN), TLS handshake, Request CERT (13):
+# * TLSv1.2 (IN), TLS handshake, Server finished (14):
+# * TLSv1.2 (OUT), TLS handshake, Certificate (11):
+# * TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+# * TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):
+# * TLSv1.2 (OUT), TLS handshake, Finished (20):
+# * TLSv1.2 (IN), TLS change cipher, Change cipher spec (1):
+# * TLSv1.2 (IN), TLS handshake, Finished (20):
+# * SSL connection using TLSv1.2 / ECDHE-RSA-CHACHA20-POLY1305
+# * ALPN, server accepted to use h2
+# * Server certificate:
+# *  subject: C=US; ST=CA; O=GOGISTICS, Inc.; CN=atai-dynamic-config.com
+# *  start date: Sep 12 01:33:13 2021 GMT
+# *  expire date: Jan 25 01:33:13 2023 GMT
+# *  issuer: C=TW; L=Kaohsiung; O=Gogistics; OU=DevOps; CN=atai-dynamic-config.com; emailAddress=gogistics@gogistics-tw.com
+# *  SSL certificate verify result: unable to get local issuer certificate (20), continuing anyway.
+# * Using HTTP2, server supports multi-use
+# * Connection state changed (HTTP/2 confirmed)
+# * Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+# * Using Stream ID: 1 (easy handle 0x7fdc4a80d600)
+# > GET /api/v1 HTTP/2
+# > Host: atai-dynamic-config.com
+# > User-Agent: curl/7.64.1
+# > Accept: */*
+# > 
+# * Connection state changed (MAX_CONCURRENT_STREAMS == 2147483647)!
+# < HTTP/2 200 
+# < content-type: application/json; charset=utf-8
+# < date: Thu, 23 Sep 2021 01:58:34 GMT
+# < content-length: 32
+# < x-envoy-upstream-service-time: 1
+# < server: envoy
+# < 
+# * Connection #0 to host atai-dynamic-config.com left intact
+# {"host":"dac57fdd19f7","wd":"/"}* Closing connection 0
 ```
+
+Note: you might encounter some issues of having Envoy talk to xDS.
+* gRPC config stream closed: 13 or gRPC config stream closed: 0 in proxy logs, every 30 minutes. This error message is expected, as the connection to Pilot is intentionally closed every 30 minutes.
+* gRPC config stream closed: 14 in proxy logs. If this occurs repeatedly it may indicate problems connecting to Pilot. However, a single occurance of this is typical when Envoy is starting or restarting.
+
+
 
 ## References:
 - https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane
 - https://github.com/envoyproxy/go-control-plane/tree/4d5454027eee333e007a8d6409efd9ed39134fa7/internal/example
 - https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/configuration-dynamic-control-plane#start-quick-start-dynamic-dynamic-resources
 - https://github.com/salrashid123/envoy_control
+- https://github.com/istio/istio/wiki/Troubleshooting-Istio#common-issues
