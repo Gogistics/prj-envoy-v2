@@ -113,11 +113,11 @@ def go_dependencies():
     )
 
     # ref: https://github.com/bazelbuild/bazel-gazelle/issues/988#issuecomment-908973994
+    # specific commit => 4f41f10dde19ec4dd9dd8cf6f7537139f52fb58b (not available in v0.6.1)
     go_repository(
         name = "com_github_envoyproxy_protoc_gen_validate",
         importpath = "github.com/envoyproxy/protoc-gen-validate",
-        sum = "h1:4CF52PCseTFt4bE+Yk3dIpdVi7XWuPVMhPtm4FaIJPM=",
-        version = "v0.6.1",
+        commit = "4f41f10dde19ec4dd9dd8cf6f7537139f52fb58b",
     )
     go_repository(
         name = "com_github_fsnotify_fsnotify",

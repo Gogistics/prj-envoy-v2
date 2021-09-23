@@ -23,7 +23,7 @@ dynamic_resources:
 # https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto.html#envoy-v3-api-msg-config-bootstrap-v3-bootstrap-staticresources
 static_resources:
   clusters:
-  - type: STRICT_DNS
+  - type: STATIC
     typed_extension_protocol_options:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
         "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
@@ -38,7 +38,17 @@ static_resources:
             address:
               socket_address:
                 address: 173.10.0.22 # need to connect this container to the other network
-                port_value: 443
+                port_value: 20000
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          tls_certificates:
+          - certificate_chain:
+              filename: "/etc/envoy/certs/atai-dynamic-config.com.crt"
+            private_key:
+              filename: "/etc/envoy/certs/atai-dynamic-config.com.key"
   secrets:
   - name: server_cert
     tls_certificate:

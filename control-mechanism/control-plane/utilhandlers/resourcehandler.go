@@ -34,19 +34,11 @@ func GenerateSnapshot() (cachev3.Snapshot, cachev3.SnapshotCache) {
 	newSnapCache = cachev3.NewSnapshotCache(true, cachev3.IDHash{}, nil)
 
 	// create cluster
-	// Note: can pass node ID into generator by flag
-	var nodeID string
-	statusKeys := newSnapCache.GetStatusKeys()
-	if len(statusKeys) > 0 {
-		nodeID = statusKeys[0]
-	} else {
-		nodeHostname, err := os.Hostname()
-		if err != nil {
-			panic(err)
-		}
-		nodeID = nodeHostname
-	}
-
+	/* Note
+	- must use node id defined in front-proxy-config.yaml
+	- can pass node ID into generator by flag
+	*/
+	var nodeID string = "atai-id-1234567"
 	clusterName := "api_service_v1"
 
 	// upstream tls context
@@ -59,7 +51,7 @@ func GenerateSnapshot() (cachev3.Snapshot, cachev3.SnapshotCache) {
 		&cluster.Cluster{
 			Name:                 clusterName,
 			ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
-			ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_LOGICAL_DNS},
+			ClusterDiscoveryType: &cluster.Cluster_Type{Type: cluster.Cluster_STATIC},
 			DnsLookupFamily:      cluster.Cluster_V4_ONLY,
 			LbPolicy:             cluster.Cluster_LEAST_REQUEST,
 			LoadAssignment: &endpoint.ClusterLoadAssignment{
@@ -153,17 +145,21 @@ func GenerateSnapshot() (cachev3.Snapshot, cachev3.SnapshotCache) {
 	}
 
 	// SDS
-	pbst, err := ptypes.MarshalAny(httpConnManager)
-	if err != nil {
-		log.Fatal(err)
+	pbst, errOfPBS := ptypes.MarshalAny(httpConnManager)
+	if errOfPBS != nil {
+		log.Fatal(errOfPBS)
 	}
-	crtSDS, err := ioutil.ReadFile("atai-dynamic-config.com.crt")
-	if err != nil {
-		log.Fatal(err)
+	crtSDS, errOfCrtSDS := ioutil.ReadFile("atai-dynamic-config.com.crt")
+	if errOfCrtSDS != nil {
+		log.Fatal(errOfCrtSDS)
 	}
-	keySDS, err := ioutil.ReadFile("atai-dynamic-config.com.key")
-	if err != nil {
-		log.Fatal(err)
+	keySDS, errOfKeySDS := ioutil.ReadFile("atai-dynamic-config.com.key")
+	if errOfKeySDS != nil {
+		log.Fatal(errOfKeySDS)
+	}
+	caSDS, errOfCASDS := ioutil.ReadFile("custom-ca-certificates.crt")
+	if errOfCASDS != nil {
+		log.Fatal(errOfKeySDS)
 	}
 
 	// sdsTLS
@@ -184,7 +180,7 @@ func GenerateSnapshot() (cachev3.Snapshot, cachev3.SnapshotCache) {
 			ValidationContextType: &envoy_api_v3_auth.CommonTlsContext_ValidationContext{
 				ValidationContext: &envoy_api_v3_auth.CertificateValidationContext{
 					TrustedCa: &core.DataSource{
-						Specifier: &core.DataSource_InlineBytes{InlineBytes: []byte("ca-certificates.crt")},
+						Specifier: &core.DataSource_InlineBytes{InlineBytes: []byte(caSDS)},
 					},
 				},
 			},
@@ -241,14 +237,35 @@ func GenerateSnapshot() (cachev3.Snapshot, cachev3.SnapshotCache) {
 	}
 	atomic.AddInt32(&version, 1)
 
+	/*
+		func NewSnapshot(version string,
+		endpoints []types.Resource,
+		clusters []types.Resource,
+		routes []types.Resource,
+		listeners []types.Resource,
+		runtimes []types.Resource,
+		secrets []types.Resource) Snapshot
+	*/
 	var snap cachev3.Snapshot
-	snap = cachev3.NewSnapshot(fmt.Sprint(version), nil, newCluster, nil, listenerOfHTTPS, nil, secretConfig)
+	snap = cachev3.NewSnapshot(
+		fmt.Sprint(version),
+		[]types.Resource{},
+		newCluster,
+		[]types.Resource{},
+		listenerOfHTTPS,
+		[]types.Resource{},
+		secretConfig)
 
 	if errCacheConsistancy := snap.Consistent(); errCacheConsistancy != nil {
 		log.Fatalf("snapshot inconsistency: %+v\n%+v", snap, errCacheConsistancy)
 		os.Exit(1)
 	}
-	// ref: https://pkg.go.dev/github.com/envoyproxy/go-control-plane@v0.9.9/pkg/cache/v3#SnapshotCache.SetSnapshot
+
+	/* Note
+	- in order to dynamically update snap, build an API to receive requests, construct new snap, and then run newSnapCache.SetSnapshot(nodeID, newSnap)
+
+	ref: https://pkg.go.dev/github.com/envoyproxy/go-control-plane@v0.9.9/pkg/cache/v3#SnapshotCache.SetSnapshot
+	*/
 	errSetSnapshot := newSnapCache.SetSnapshot(nodeID, snap)
 	if errSetSnapshot != nil {
 		log.Fatalf("Could not set snapshot %v", errSetSnapshot)

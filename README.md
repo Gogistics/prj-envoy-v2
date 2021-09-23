@@ -183,7 +183,7 @@ $ docker logs atai_grpc_control_plane
 # 2021/09/20 17:15:07 Resource management server listening on 20000
 
 # in order to have atai_grpc_control_plane communicate with the frontend Envoy in atai_apis_network, connect atai_grpc_control_plane to atai_apis_network
-$ docker network atai_apis_network atai_grpc_control_plane
+$ docker network connect atai_apis_network atai_grpc_control_plane
 
 # once the testing has been completed, remove the container
 $ docker rm -f atai_grpc_control_plane
@@ -222,7 +222,7 @@ $ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
 # test the Docker image
 $ docker run -d \
     -p 8443:443 \
-    --name atai_dynamic_control_service_api_v1 \
+    --name atai_service_api_v1 \
     --network atai_apis_network \
     --ip "173.11.0.21" \
     --log-opt mode=non-blocking \
@@ -246,6 +246,54 @@ $ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
 ## Build Docker images of Envoy proxies (WIP)
 
 ## Bring up all components required for testing Envoy xDS (WIP)
+
+```sh
+# bring up Envoy
+$ docker run -d \
+      --name atai_front_proxy \
+      -p 80:80 -p 443:443 -p 8001:8001 \
+      --network atai_apis_network \
+      --ip "173.11.0.10" \
+      --log-opt mode=non-blocking \
+      --log-opt max-buffer-size=5m \
+      --log-opt max-size=100m \
+      --log-opt max-file=5 \
+      alantai/prj-envoy-v2/envoys:front-proxy-v0.0.0 && \
+      docker network connect atai_control_mechanism atai_front_proxy
+
+# bring up API V1
+$ docker run -d \
+    --name atai_service_api_v1_1 \
+    --network atai_apis_network \
+    --ip "173.11.0.21" \
+    --log-opt mode=non-blocking \
+    --log-opt max-buffer-size=5m \
+    --log-opt max-size=100m \
+    --log-opt max-file=5 \
+    alantai/prj-envoy-v2/services/api-v1:api-v1.0.0.0
+
+$ docker run -d \
+    --name atai_service_api_v1_2 \
+    --network atai_apis_network \
+    --ip "173.11.0.22" \
+    --log-opt mode=non-blocking \
+    --log-opt max-buffer-size=5m \
+    --log-opt max-size=100m \
+    --log-opt max-file=5 \
+    alantai/prj-envoy-v2/services/api-v1:api-v1.0.0.0
+
+# bring up control plane
+$ docker run -itd \
+    --name atai_grpc_control_plane \
+    --network atai_control_mechanism \
+    --ip "173.10.0.22" \
+    --log-opt mode=non-blocking \
+    --log-opt max-buffer-size=5m \
+    --log-opt max-size=100m \
+    --log-opt max-file=5 \
+    alantai/prj-envoy-v2/control-mechanism/control-plane:control-plane-v0.0.0 && \
+    docker network connect atai_apis_network atai_grpc_control_plane
+```
 
 ## References:
 - https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane

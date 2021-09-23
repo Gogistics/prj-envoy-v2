@@ -23,14 +23,16 @@ import (
 )
 
 const (
-	grpcKeepaliveTime        = 20 * time.Second
-	grpcKeepaliveTimeout     = 5 * time.Second
-	grpcKeepaliveMinTime     = 20 * time.Second
-	grpcMaxConcurrentStreams = 10000
+	grpcKeepaliveTime         = 30 * time.Second
+	grpcKeepaliveTimeout      = 15 * time.Second
+	grpcMaxConnectionAge      = 120 * time.Second
+	grpcMaxConnectionAgeGrace = 30 * time.Second
+	grpcKeepaliveMinTime      = 30 * time.Second
+	grpcMaxConcurrentStreams  = 10000
 )
 
 var (
-	port    = ":20000"
+	port    = 20000
 	crtFile = "atai-dynamic-config.com.crt"
 	keyFile = "atai-dynamic-config.com.key"
 )
@@ -44,8 +46,6 @@ func registerServer(grpcServer *grpc.Server, server serverv3.Server) {
 	listenerservice.RegisterListenerDiscoveryServiceServer(grpcServer, server)
 	secretservice.RegisterSecretDiscoveryServiceServer(grpcServer, server)
 	runtimeservice.RegisterRuntimeDiscoveryServiceServer(grpcServer, server)
-
-	// TODO: add API server here for generating new config.
 }
 
 // RunServer starts an xDS server at the given port.
@@ -58,6 +58,7 @@ func RunServer(port uint) {
 		Signal:   signal,
 		Fetches:  0,
 		Requests: 0,
+		Debug:    true,
 	}
 
 	snapshot, cache := GenerateSnapshot()
@@ -85,8 +86,10 @@ func RunServer(port uint) {
 		grpc.MaxHeaderListSize(10240),
 		grpc.MaxConcurrentStreams(grpcMaxConcurrentStreams),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
-			Time:    grpcKeepaliveTime,
-			Timeout: grpcKeepaliveTimeout,
+			Time:                  grpcKeepaliveTime,
+			Timeout:               grpcKeepaliveTimeout,
+			MaxConnectionAge:      grpcMaxConnectionAge,
+			MaxConnectionAgeGrace: grpcMaxConnectionAgeGrace,
 		}),
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             grpcKeepaliveMinTime,
