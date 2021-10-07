@@ -1,9 +1,5 @@
 # Dynamic configuration xDS (WIP)
-
-## Steps of running dynamic configuration
-1. Draw the [diagram of the container topology](https://drive.google.com/file/d/1ejx5Ap5PRk9eLVTmWkykfbR9FIDrGaOU/view?usp=sharing)
-2. Create the folders for resource management
-3. Install required tools such as Docker and Bazel
+An xDS management server is a mechanism that supports dynamic bootstrap configuration and its APIs are defined as proto3 Protocol Buffers in the api tree.
 
 ## Context
 Dynamically update Envoy by the control plane and what we are going to test are as follows:
@@ -11,6 +7,11 @@ Dynamically update Envoy by the control plane and what we are going to test are 
 * Send new configuration to the control plane, and it will forward the configuration to the Envoy. Test the API service 1. and will receive the response.
 * Send new configuration to the control plane, and it will forward the configuration to the Envoy. Test the API service 2. and will receive the response.
 * Stop the control plane and all services should still work fine.
+
+## Steps of implementing dynamic configuration
+1. Draw the [diagram of the container topology](https://drive.google.com/file/d/1ejx5Ap5PRk9eLVTmWkykfbR9FIDrGaOU/view?usp=sharing)
+2. Create the folders for resource management
+3. Install required tools such as Docker and Bazel
 
 ## Development steps (WIP)
 Step 1. init networks
@@ -351,8 +352,14 @@ Note: you might encounter some issues of having Envoy talk to xDS.
 
 
 ## References:
-- https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane
-- https://github.com/envoyproxy/go-control-plane/tree/4d5454027eee333e007a8d6409efd9ed39134fa7/internal/example
-- https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/configuration-dynamic-control-plane#start-quick-start-dynamic-dynamic-resources
-- https://github.com/salrashid123/envoy_control
-- https://github.com/istio/istio/wiki/Troubleshooting-Istio#common-issues
+- [On the state of Envoy Proxy control planes](https://mattklein123.dev/2020/03/15/on-the-state-of-envoy-proxy-control-planes/)
+- [Build Your Own Envoy Control Plane - Steve Sloka, VMware](https://youtu.be/qAuq4cKEG_E)
+- [Hoot: Envoy xDS Dynamic Configuration and Control Plane Interactions](https://youtu.be/S5Fm1Yhomc4)
+- [Evolution of Envoy as a Dynamic Redis Proxy - Nicolas Flacco, Henry Yang & Mitch Sulaski](https://youtu.be/SWVGENzonHE)
+- [xDS REST and gRPC protocol — envoy 1.20.0-dev-6f2726 documentation](https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol)
+
+- [Dynamic configuration control plane](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane)
+- [Control plane in Golang](https://github.com/envoyproxy/go-control-plane/tree/4d5454027eee333e007a8d6409efd9ed39134fa7/internal/example)
+- [Quick start with dynamic resources](https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/configuration-dynamic-control-plane#start-quick-start-dynamic-dynamic-resources)
+- [Envoy dynamic control](https://github.com/salrashid123/envoy_control)
+- [Common issues of dynamic control plane](https://github.com/istio/istio/wiki/Troubleshooting-Istio#common-issues)
