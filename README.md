@@ -33,13 +33,19 @@ Dynamically update Envoy by the control plane and what we are going to test are 
 2. Create the folders for resource management
 3. Install required tools such as Docker and Bazel
 
-## Development steps (WIP)
-Step 1. init networks
-Step 2. start Envoy front proxy
-Step 3. check the config.
+## Development steps
+Step 1. Init networks and generate certs
+Step 2. Start Envoy front proxy and check the Envoy dynamic active clusters
+Step 3. Build xDS server and run the server
+Step 4. Build API service
+Step 5. Check the Envoy dynamic active clusters and test the API endpoints
 
-
+1. Init networks and generate certs
 ```sh
+# init network
+$ ./utils/scripts/init_networks.sh
+
+# generate certs
 $ cd utils/
 
 # create a cert authority
@@ -97,7 +103,7 @@ $ openssl x509 -req \
 # \generate certificates for proxy and app
 ```
 
-
+2. Start Envoy front proxy and check the Envoy dynamic active clusters
 ```sh
 # run the gazelle target specified in the BUILD file
 $ bazel run //:gazelle
@@ -164,7 +170,12 @@ $ curl -s http://0.0.0.0:8001/config_dump | grep -A 35 -B 1 static_cluster
 #      "last_updated": "2021-09-12T02:08:02.592Z"
 #     }
 $ curl -s http://0.0.0.0:8001/config_dump | grep -A 10 -B 1 dynamic_active_clusters
+```
 
+3. Build xDS server and run the server
+All source code of control plane servers are under **/control-mechanism/control-plane**
+
+```sh
 # test gRPC and control plane servers
 $  docker run --name atai-go-dev \
      --network atai_control_mechanism \
@@ -177,7 +188,6 @@ $  docker run --name atai-go-dev \
      golang:latest bash
 
 # write Bazel build to create a Docker image of the control plane
-
 # build Docker image of the control plane by Bazel
 # Note: currently this step needs workarounds because of the issues of com_github_envoyproxy_protoc_gen_validate and com_github_census_instrumentation_opencensus_proto
 # Solutions:
@@ -210,10 +220,11 @@ $ docker network connect atai_apis_network atai_grpc_control_plane
 $ docker rm -f atai_grpc_control_plane
 ```
 
-## Build API services
+4. Build API service
 Let's start writing API services.
-1. build the web app in Golang; source codes are under */services/api/v1* and */services/api/v2*
-2. test the web app by running it inside a container
+
+4-1. build the web app in Golang; source codes are under */services/api/v1* and */services/api/v2*
+4-2. test the web app by running it inside a container
 ```sh
 $ docker run -it \
      --name atai_api_v1_dev \
@@ -264,9 +275,11 @@ $ bazel run --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
     //services/api-v2:api-v2.0.0.0
 ```
 
-## Build Docker images of Envoy proxies (WIP)
+5. Check the Envoy dynamic active clusters and test the API endpoints
 
-## Bring up all components required for testing Envoy xDS
+5-1. Build Docker images of Envoy proxies (WIP)
+
+5-2. Bring up all components required for testing Envoy xDS
 ```sh
 # bring up Envoy
 $ docker run -d \
@@ -365,10 +378,9 @@ $ curl -k -vvv https://atai-dynamic-config.com/api/v1
 # {"host":"dac57fdd19f7","wd":"/"}* Closing connection 0
 ```
 
-Note: you might encounter some issues of having Envoy talk to xDS.
+Notes: you might encounter some issues of having Envoy talk to xDS.
 * gRPC config stream closed: 13 or gRPC config stream closed: 0 in proxy logs, every 30 minutes. This error message is expected, as the connection to Pilot is intentionally closed every 30 minutes.
 * gRPC config stream closed: 14 in proxy logs. If this occurs repeatedly it may indicate problems connecting to Pilot. However, a single occurance of this is typical when Envoy is starting or restarting.
-
 
 
 ## References:
