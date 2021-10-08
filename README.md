@@ -1,5 +1,25 @@
 # Dynamic configuration xDS (WIP)
-An xDS management server is a mechanism that supports dynamic bootstrap configuration and its APIs are defined as proto3 Protocol Buffers in the api tree.
+An xDS management server is a mechanism that supports dynamic bootstrap configuration and its APIs are defined as proto3 Protocol Buffers in the api tree. In oreder to build our own xDS service, certain basic knowledge are required. First we need to know how many xDS types are supported in v3 and the variants of the xDS Transport protocol.
+
+The v3 xDS types supported by Envoy are:
+* envoy.config.listener.v3.Listener
+* envoy.config.route.v3.RouteConfiguration
+* envoy.config.route.v3.ScopedRouteConfiguration
+* envoy.config.route.v3.VirtualHost
+* envoy.config.cluster.v3.Cluster
+* envoy.config.endpoint.v3.ClusterLoadAssignment
+* envoy.extensions.transport_sockets.tls.v3.Secret
+* envoy.service.runtime.v3.Runtime
+
+Four variants of the xDS transport protocol are:
+1. State of the World (Basic xDS): SotW, separate gRPC stream for each resource type
+2. Incremental xDS: incremental, separate gRPC stream for each resource type
+3. Aggregated Discovery Service (ADS): SotW, aggregate stream for all resource types
+4. Incremental ADS: incremental, aggregate stream for all resource types
+
+Ref:
+- [xDS REST and gRPC protocol — envoy 1.20.0-dev-6f2726 documentation](https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol)
+
 
 ## Context
 Dynamically update Envoy by the control plane and what we are going to test are as follows:
@@ -356,8 +376,6 @@ Note: you might encounter some issues of having Envoy talk to xDS.
 - [Build Your Own Envoy Control Plane - Steve Sloka, VMware](https://youtu.be/qAuq4cKEG_E)
 - [Hoot: Envoy xDS Dynamic Configuration and Control Plane Interactions](https://youtu.be/S5Fm1Yhomc4)
 - [Evolution of Envoy as a Dynamic Redis Proxy - Nicolas Flacco, Henry Yang & Mitch Sulaski](https://youtu.be/SWVGENzonHE)
-- [xDS REST and gRPC protocol — envoy 1.20.0-dev-6f2726 documentation](https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol)
-
 - [Dynamic configuration control plane](https://www.envoyproxy.io/docs/envoy/latest/start/sandboxes/dynamic-configuration-control-plane)
 - [Control plane in Golang](https://github.com/envoyproxy/go-control-plane/tree/4d5454027eee333e007a8d6409efd9ed39134fa7/internal/example)
 - [Quick start with dynamic resources](https://www.envoyproxy.io/docs/envoy/latest/start/quick-start/configuration-dynamic-control-plane#start-quick-start-dynamic-dynamic-resources)
