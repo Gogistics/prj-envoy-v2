@@ -1,4 +1,4 @@
-# Dynamic configuration xDS (WIP)
+# Dynamic configuration xDS
 An xDS management server is a mechanism that supports dynamic bootstrap configuration and its APIs are defined as proto3 Protocol Buffers in the api tree. In oreder to build our own xDS service, certain basic knowledge are required. First we need to know how many xDS types are supported in v3 and the variants of the xDS Transport protocol.
 
 The v3 xDS types supported by Envoy are:
@@ -19,6 +19,9 @@ Four variants of the xDS transport protocol are:
 
 Ref:
 - [xDS REST and gRPC protocol — envoy 1.20.0-dev-6f2726 documentation](https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol)
+- [Integrating the Envoy gRPC API into a Dynamic Service Discovery Platform](https://youtu.be/tTaFcZVqbbY)
+- [Eventual consistency](https://en.wikipedia.org/wiki/Eventual_consistency)
+- [IPC - Synchronous Communication (part 1/3) : Remote Procedure Invocation pattern](https://youtu.be/y4c5t85av7o)
 
 
 ## Context
